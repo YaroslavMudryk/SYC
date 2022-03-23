@@ -1,0 +1,27 @@
+﻿<Window x:Class="SYC.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SYC.Desktop"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <DockPanel LastChildFill="True">
+            <StackPanel  HorizontalAlignment="Left" DockPanel.Dock="Top">
+                <Label Name="labelSearch" Content="Пошук"/>
+                <TextBox Name="textboxsearch" Width="309" TextChanged="textboxsearch_TextChanged">
+                </TextBox>
+            </StackPanel>
+            <ListView Name="listview" Width="350" DockPanel.Dock="Top" HorizontalAlignment="Left" FontWeight="Bold" FontSize="10" AlternationCount="3">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Імя" DisplayMemberBinding="{Binding Path=FirstName}"></GridViewColumn>
+                        <GridViewColumn Header="Прізвище" DisplayMemberBinding="{Binding Path=LastName}"></GridViewColumn>
+                        <GridViewColumn Header="По-батькові" DisplayMemberBinding="{Binding Path=MiddleName}"></GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </DockPanel>
+    </Grid>
+</Window>

@@ -2,7 +2,7 @@
 
 namespace SYC.Core.Storage
 {
-    public interface IPersonRepository
+    public interface IPersonRepository : IAsyncDisposable
     {
         Task<List<Person>> SearchPeopleAsync(string query);
         Task<List<Person>> GetAllPeopleAsync();

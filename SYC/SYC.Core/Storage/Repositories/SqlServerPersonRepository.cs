@@ -20,6 +20,11 @@ namespace SYC.Core.Storage.Repositories
             return person;
         }
 
+        public ValueTask DisposeAsync()
+        {
+            return _db.DisposeAsync();
+        }
+
         public async Task<List<Person>> GetAllPeopleAsync()
         {
             return await _db.People.AsNoTracking().OrderBy(x => x.Id).ToListAsync();

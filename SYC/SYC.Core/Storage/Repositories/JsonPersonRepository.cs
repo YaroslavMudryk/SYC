@@ -2,7 +2,7 @@
 using System.Text.Json;
 namespace SYC.Core.Storage.Repositories
 {
-    public class JsonPersonRepository : IPersonRepository
+    public class JsonPersonRepository : IPersonRepository, IAsyncDisposable
     {
         private string _path = "People.json";
         private List<Person> _people;
@@ -22,6 +22,11 @@ namespace SYC.Core.Storage.Repositories
             }
             var sr = new StreamReader(_path);
             var content = sr.ReadToEnd();
+            if (content == String.Empty)
+            {
+                _people = new List<Person>();
+                return;
+            }
             var people = JsonSerializer.Deserialize<List<Person>>(content);
             _people = people == null || people.Count == 0 ? new List<Person>() : people;
             sr.Dispose();
@@ -29,19 +34,16 @@ namespace SYC.Core.Storage.Repositories
 
         private async Task UploadAsync()
         {
-            if (File.Exists(_path))
-                File.Delete(_path);
             var sw = new StreamWriter(_path);
             var jsonContent = JsonSerializer.Serialize(_people);
             await sw.WriteAsync(jsonContent);
-            sw.Dispose();
+            sw.Close();
         }
 
         public async Task<Person> CreatePersonAsync(Person person)
         {
             _people.Add(person);
-            await UploadAsync();
-            return person;
+            return await Task.FromResult(person);
         }
 
         public async Task<List<Person>> GetAllPeopleAsync()
@@ -58,7 +60,6 @@ namespace SYC.Core.Storage.Repositories
         {
             var person = await GetPersonByIdAsync(id);
             _people.Remove(person);
-            await UploadAsync();
         }
 
         public async Task<List<Person>> SearchPeopleAsync(string query)
@@ -68,18 +69,17 @@ namespace SYC.Core.Storage.Repositories
             var peopleByNames = _people
                 .Where(x => x.FirstName.Contains(query) ||
                 x.LastName.Contains(query) ||
-                x.MiddleName.Contains(query) ||
-                x.Description.Contains(query))
+                x.MiddleName.Contains(query))
                 .ToList();
             commonResult.AddRange(peopleByNames);
 
-            commonResult.AddRange(_people.Where(x => x.Phones.FirstOrDefault(s => s.Contains(query)) != null));
+            commonResult.AddRange(_people.Where(x => x.Phones != null && x.Phones.FirstOrDefault(s => s.Contains(query)) != null));
 
-            commonResult.AddRange(_people.Where(x => x.Emails.FirstOrDefault(s => s.Contains(query)) != null));
+            commonResult.AddRange(_people.Where(x => x.Emails != null && x.Emails.FirstOrDefault(s => s.Contains(query)) != null));
 
-            commonResult.AddRange(_people.Where(x => x.BankCards.FirstOrDefault(s => s.Contains(query)) != null));
+            commonResult.AddRange(_people.Where(x => x.BankCards != null && x.BankCards.FirstOrDefault(s => s.Contains(query)) != null));
 
-            commonResult.AddRange(_people.Where(x => x.CarNumbers.FirstOrDefault(s => s.Contains(query)) != null));
+            commonResult.AddRange(_people.Where(x => x.CarNumbers != null && x.CarNumbers.FirstOrDefault(s => s.Contains(query)) != null));
 
             commonResult.DistinctBy(s => s.Id);
             commonResult = commonResult.OrderBy(x => x.Id).ToList();
@@ -91,8 +91,12 @@ namespace SYC.Core.Storage.Repositories
             var currentPerson = await GetPersonByIdAsync(person.Id);
             _people.Remove(currentPerson);
             _people.Add(person);
-            await UploadAsync();
-            return person;
+            return await Task.FromResult(person);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await UploadAsync().ConfigureAwait(false);
         }
     }
 }
